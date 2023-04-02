@@ -9,23 +9,15 @@ from main import run_with_timeout
 from sims import getopt_hook
 from detectors import SymbolicStrlenDetector
 from helpers import print_cs
+from helpers import parse_entry_state_json
 
-
-proj = angr.Project(os.path.abspath("../libtiff/my_build/bin/tiffcp"), load_options={"auto_load_libs":False})
-entry = proj.factory.entry_state(args=["tiffcp", "/tmp/poc", "/tmp/foo"])
+proj = angr.Project(os.path.abspath("../../libtiff/my_build/bin/tiffcp"), load_options={"auto_load_libs":False})
+entry, _ = parse_entry_state_json(proj, "../misc/trace", "../misc/trace")
 
 loop_head = proj.loader.find_symbol("TIFFReadDirectory").rebased_addr
 
 #proj.hook_symbol("getopt", getopt_hook())
 
-poc_file = open("../poc", "rb")
-poc_raw = poc_file.read()
-poc_file.read()
-
-poc = angr.SimFile("/tmp/poc", content=poc_raw, concrete=True, writable=False, has_end=True)
-out = angr.SimFile("/tmp/foo")
-entry.fs.insert("/tmp/poc", poc)
-entry.fs.insert("/tmp/foo", out)
 
 logging.getLogger().setLevel("ERROR")
 eup = EUPExplorer(proj, entry)
